@@ -753,25 +753,65 @@ def is_staffed_user(sender, instance, **kwargs):
 
 <hr>
 
-- pip install django-cors-headers
+# <center>✔ DJANGO-CORS-HEADERS ✔</center>
 
-- 'corsheaders', to INSTALLEDAPP
+## <center> 👆 FOR REACT CONFIGURATION 👆 <center>
 
-- mıddleware'e  "corsheaders.middleware.CorsMiddleware" ekle
+<hr>
 
-- CORS_ALLOW_ALL_ORIGINS=True TO SETTİNGS.PY
+🔑 A Django App that adds [Cross-Origin Resource Sharing (CORS)](https://github.com/adamchainz/django-cors-headers) headers to responses.
 
-- CORS_ALLOW_METHODS = [
+🔑 This allows in-browser requests to your Django application from other origins.
+
+🔑 Adding CORS headers allows your resources to be accessed on other domains.
+
+🔑 It's important you understand the implications before adding the headers, since you could be unintentionally opening up your site's private data to others.
+
+## 💻 To install cors 👇
+
+```bash
+pip install django-cors-headers
+```
+
+## ✔ Add 'corsheaders' to "INSTALLED_APPS" in "settings.py"
+
+## 🚩 You will also need to add a middleware class to listen in on responses 👇
+
+```python
+MIDDLEWARE = [
+    ...,
+    "corsheaders.middleware.CorsMiddleware",
+    ...,
+]
+```
+
+## 🚩 To allow all origins add 👇
+
+```python
+CORS_ALLOW_ALL_ORIGINS=True
+```
+
+## 🚩 Add a list of HTTP verbs that are allowed for the actual request 👇
+
+```python
+CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",
     "OPTIONS",
     "PATCH",
     "POST",
     "PUT",
-] TO SETTINGS.PY
+]
+```
 
-- RUNSERVER
+## 💻 Runserver 👇
 
-- REACT PROJESİNİ AÇ
-- TERMİNAL YARN START
-- 
+```bash
+python manage.py runserver
+```
+
+## 💻 Open the React Project and start it 👇
+
+```bash
+yarn start
+```
