@@ -49,4 +49,31 @@ class PersonalGetUpdateDelete(RetrieveUpdateDestroyAPIView):
     queryset = Personal.objects.all()
     serializer_class=PersonalSerializer
     # permission_classes = [IsAuthenticated]
-    
+    lookup_field = 'id'
+    #! Since the default lookup-field is "pk", when we send it from the url with pk, it happens even if we don't write it. 👆
+
+    def put(self, request, *args, **kwargs):
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            return self.update(request, *args, **kwargs)
+        else:
+            data = {
+                "message": "You are not authorized to perform this operation"
+            }
+            return Response(data, status=status.HTTP_401_UNAUTHORIZED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if self.request.user.is_superuser:
+            self.perform_destroy(instance)
+            data = {
+                "message": f"Name: {instance.first_name} deleted."
+            }
+            return Response(data, status=status.HTTP_204_NO_CONTENT)
+        else:
+            data = {
+                "message": "You are not authorized to perform this operation"
+            }
+            return Response(data, status=status.HTTP_401_UNAUTHORIZED)
+
+    def perform_destroy(self, instance):
+        instance.delete()
