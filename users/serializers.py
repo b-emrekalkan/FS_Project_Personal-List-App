@@ -68,15 +68,15 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "full_name",
-            "is_staff",# frontend kısmında butonların aktif olması için
+            "is_staff", #! For the buttons to be active in the frontend
         )
     def get_full_name(self,obj):
         return f"{obj.first_name.title()} {obj.last_name.upper()}"
 
+#! We need to override the TokenSerializer to return all user data in a single request.
 class CustomTokenSerializer(TokenSerializer):
     user = UserSerializer(read_only=True)
 
     class Meta(TokenSerializer.Meta):
         model = Token
         fields = ("key", "user")
-

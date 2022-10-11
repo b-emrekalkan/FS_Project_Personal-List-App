@@ -197,3 +197,261 @@ python manage.py runserver
 
 <hr>
 
+## 🚩 ADDING AN APP
+
+💻 Go to terminal 👇
+
+```bash
+python manage.py startapp users
+```
+
+✔ Go to "settings.py" and add 'users' app to "INSTALLED_APPS"
+
+## 💻 INSTALL [DJ-REST-AUTH](https://dj-rest-auth.readthedocs.io/en/latest/)
+
+```bash
+pip install dj-rest-auth
+```
+
+💻 Go to terminal to update "requirements.txt"  👇
+
+```bash
+pip freeze > requirements.txt
+```
+
+## 🚩 Add "dj_rest_auth" app to "INSTALLED_APPS" in your django "base.py" 👇
+
+```python
+    'rest_framework',
+    'rest_framework.authtoken',
+    'dj_rest_auth',
+```
+
+## 🚩 Go to "main/urls.py" and add the path 👇
+
+```python
+path('users/', include('users.urls'))
+```
+
+## ✔ Create "urls.py" file under "users" App 👇
+
+## 🚩 Go to "users/urls.py" and add 👇
+
+```python
+from django.urls import path, include
+
+urlpatterns = [
+    path('auth/', include('dj_rest_auth.urls')),
+]
+```
+
+## 💻 Migrate your database
+
+```bash
+python manage.py migrate
+```
+
+## ✔ Create "serializers.py" file under "users" App and add 👇
+
+```python
+from rest_framework import serializers, validators
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from dj_rest_auth.serializers import TokenSerializer
+from rest_framework.authtoken.models import Token
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        required=True,
+        validators=[validators.UniqueValidator(queryset=User.objects.all())]
+    )
+    first_name = serializers.CharField(
+        max_length=100,
+        required=True
+    )
+    last_name = serializers.CharField(
+        max_length=100,
+        required=True
+    )
+    password = serializers.CharField(
+        write_only=True,
+        # required=True,
+        validators=[validate_password],
+        style={"input_type": "password"}
+    )
+    password2 = serializers.CharField(
+        write_only=True,
+        required=True,
+        validators=[validate_password],
+        style={"input_type": "password"}
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "password",
+            "password2"
+        )
+
+    def create(self, validated_data):
+        password = validated_data.pop("password")
+        validated_data.pop("password2")
+        user = User.objects.create(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
+    def validate(self, data):
+        if data["password"] != data["password2"]:
+            raise serializers.ValidationError(
+                {"password": "Password didn't match...."}
+            )
+        return data
+
+class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "full_name",
+            "is_staff", #! For the buttons to be active in the frontend
+        )
+    def get_full_name(self,obj):
+        return f"{obj.first_name.title()} {obj.last_name.upper()}"
+
+class CustomTokenSerializer(TokenSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta(TokenSerializer.Meta):
+        model = Token
+        fields = ("key", "user")
+```
+
+## 🚩 Go to "views.py"
+
+```python
+from rest_framework import generics
+from django.contrib.auth.models import User
+from .serializers import RegisterSerializer
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+```
+
+## 🚩 Go to "urls.py" and add the path 👇
+
+```python
+path("auth/register/",RegisterView.as_view(),name="register"),
+```
+
+## 🚩 Go to "settings.py" and add 👇
+
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
+```
+
+## 🚩 Create "signals.py" under "user" App and add 👇
+
+```python
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
+
+@receiver(post_save, sender=User)
+def create_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+```
+
+## 🚩 Go to "apps.py" and add this under UsersConfig() 👇
+
+```python
+def ready(self) -> None:
+    import account.signals
+```
+
+## 🚩 Go to "views.py" and customize RegisterView()👇
+
+```python
+from rest_framework import generics, status
+from django.contrib.auth.models import User
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from .serializers import RegisterSerializer
+
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+
+    #! When user register 👉 "username", "email","first_name","last_name" and "token" will be returned. 👇
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        data = serializer.data
+        if Token.objects.filter(user=user).exists():
+            token = Token.objects.get(user=user).key
+            data["token"] = token
+        else:
+            data["token"] = "No token created for this user.... :))"
+        headers = self.get_success_headers(serializer.data)
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+```
+
+## 🚩 Override TokenSerializer() 👇
+
+```python
+from dj_rest_auth.serializers import TokenSerializer
+
+class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "full_name",
+            "is_staff", #! For the buttons to be active in the frontend
+        )
+    def get_full_name(self,obj):
+        return f"{obj.first_name.title()} {obj.last_name.upper()}"
+
+
+#! We need to override the TokenSerializer to return all user data in a single request.
+class CustomTokenSerializer(TokenSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta(TokenSerializer.Meta):
+        model = Token
+        fields = ("key", "user")
+```
+
+## 🚩 Go to "settings.py" and add 👇
+
+```python
+REST_AUTH_SERIALIZERS = {
+    'TOKEN_SERIALIZER': 'users.serializers.CustomTokenSerializer',
+}
+```
+
+<hr>
+

@@ -12,6 +12,7 @@ class RegisterView(CreateAPIView):
     serializer_class = RegisterSerializer
     queryset = User.objects.all()
 
+    #! When user register 👉 "username", "email","first_name","last_name" and "token" will be returned. 👇
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
