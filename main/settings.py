@@ -47,6 +47,7 @@ INSTALLED_APPS = [
 
     #myApps
     'users',
+    'personalApp',
 ]
 
 MIDDLEWARE = [
@@ -90,9 +91,6 @@ DATABASES = {
     }
 }
 
-REST_AUTH_SERIALIZERS = {
-    'TOKEN_SERIALIZER': 'users.serializers.CustomTokenSerializer',
-}
 
 
 # Password validation
@@ -131,6 +129,9 @@ REST_FRAMEWORK = {
     ]
 }
 
+REST_AUTH_SERIALIZERS = {
+    'TOKEN_SERIALIZER': 'users.serializers.CustomTokenSerializer',
+}
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 

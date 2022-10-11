@@ -193,6 +193,29 @@ python manage.py runserver
 
 <hr>
 
+
+## 🔑 PROJECT REQUEST 👇
+
+- We will have Department and Personal tables and we will link them together. Each department will have its own personnel under it.
+
+- At the end of the full stack project, the company personnel who log in will be able to see the company's departments and the personnel working under those departments in detail.
+
+- Staff members will be able to add new staff to the list and update them.
+
+- Our Personal model will have the "is_staffed" option. If this option is true, we will query the User table according to the user's first and last name, and if there is a user, we will set the is_staff property to true from the information in the User table of that staff.
+
+- Only superusers will have the authority to delete staff.
+
+- We will make this structure using "generic view". In order to override Class methods, we will provide if-else structures that should act accordingly whether the person is a staff or superuser. We will use IsAuthenticated from Rest framework permissions.
+
+- We will use nested serializer and methodfields in our serializer.
+
+- We will use token authentication. We will delete the token when the user logs out.
+
+- We will use the cors-headers package to connect the frontend to our API.
+
+<hr>
+
 # <center> 🚀 AUTHENTICATION </center>
 
 <hr>
@@ -372,6 +395,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
+#! We generate a token for the user in signals.py so that the user can login when she registers, so that the user can log in directly when she registers.
 @receiver(post_save, sender=User)
 def create_token(sender, instance=None, created=False, **kwargs):
     if created:
@@ -455,3 +479,82 @@ REST_AUTH_SERIALIZERS = {
 
 <hr>
 
+## 💻 Go to terminal and create "personalApp" app 👇
+
+```bash
+python manage.py startapp personalApp
+```
+
+## settings .... INSTALLED APP
+
+## Create files in this app .....
+
+## 🚩 Go to "models.py" and create models 👇
+
+```python
+from email.policy import default
+from django.db import models
+from django.contrib.auth.models import User
+# Create your models here.
+class Department(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
+class Personal(models.Model):
+    #* "SET_NULL" makes the corresponding field "null" when the user is deleted
+    #! When we use "set_null" we have to say "null=True" 👇
+
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, related_name='departments')
+
+    #?#related_name="deparments" tells us that the staffs are related to the deparment and is used to call it later. We can check the relationship with deparment.id and staff.id. #related_name="deparments" tells us that staffs have a relationship with deparment, and it is used to call it later. We can check the relationship with deparment.id and staff.id. 👆
+
+    create_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    is_staffed = models.BooleanField(default=False)
+
+    TITLE = (
+        ("Team Lead", "LEAD"),
+        ("Mid Lead", "MID"),
+        ("Junior", "JUN"),
+    )
+    title = models.CharField(max_length=50, choices=TITLE)
+
+    GENDER =(
+        ("Female", "F"),
+        ("Male", "M"),
+        ("Other", "O"),
+        ("Prefer Not Say", "N"),
+    )
+    gender = models.CharField(max_length=50, choices=GENDER)
+    salary = models.IntegerField(default=1250)
+    start_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} : {self.first_name} {self.last_name}"
+```
+
+## 🚩 REGISTER İN ADMİN
+
+```python
+from django.contrib import admin
+from personalApp.models import Department, Personal
+
+admin.site.register(Department)
+admin.site.register(Personal)
+```
+
+## 💻 Migrate db,
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+## Serializers.
+
+```python
+
+```
