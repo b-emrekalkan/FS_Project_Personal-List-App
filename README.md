@@ -638,7 +638,7 @@ path('api/',include('personalApp.urls')),
 
 ```python
 class DepartmentPersonalView(generics.ListAPIView):
-    serializer_class = DepartmentSerializer
+    serializer_class = DepartmentPersonalSerializer
     queryset = Department.objects.all()
     # permission_classes = [IsAuthenticated]
 
@@ -720,5 +720,58 @@ class PersonalGetUpdateDelete(RetrieveUpdateDestroyAPIView):
 ## 🚩 urls 👇
 
 ```python
-
+path('personal/', PersonalListCreate.as_view()),
+path('personal/<int:pk>/', PersonalGetUpdateDelete.as_view()),
 ```
+
+## 🚩 Go to signals.py and add
+
+```python
+from django.contrib.auth.models import User
+from .models import Personal
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Personal)
+def is_staffed_user(sender, instance, **kwargs):
+    if instance.is_staffed:
+        user = User.objects.get(first_name=instance.first_name, last_name=instance.last_name)
+        if user:
+            user.is_staff = True
+            user.save()
+        else:
+            instance.is_staffed = False
+            instance.save()
+```
+
+## 🚩 Go to apps.py and add 👇
+
+```python
+ def ready(self):
+        import personalApp.signals
+```
+
+<hr>
+
+- pip install django-cors-headers
+
+- 'corsheaders', to INSTALLEDAPP
+
+- mıddleware'e  "corsheaders.middleware.CorsMiddleware" ekle
+
+- CORS_ALLOW_ALL_ORIGINS=True TO SETTİNGS.PY
+
+- CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+] TO SETTINGS.PY
+
+- RUNSERVER
+
+- REACT PROJESİNİ AÇ
+- TERMİNAL YARN START
+- 

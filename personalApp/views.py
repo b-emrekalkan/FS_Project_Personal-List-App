@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from rest_framework import status
 from rest_framework import generics
 from personalApp.models import Department, Personal
@@ -14,7 +15,7 @@ class DepartmentView(generics.ListAPIView):
     #! only logged in users can make a get request 👆
 
 class DepartmentPersonalView(generics.ListAPIView):
-    serializer_class = DepartmentSerializer
+    serializer_class = DepartmentPersonalSerializer
     queryset = Department.objects.all()
     # permission_classes = [IsAuthenticated]
 

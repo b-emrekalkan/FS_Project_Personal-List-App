@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from .views import RegisterView, logout 
+from .views import RegisterView, logout
 
 urlpatterns = [
     path('auth/', include('dj_rest_auth.urls')),

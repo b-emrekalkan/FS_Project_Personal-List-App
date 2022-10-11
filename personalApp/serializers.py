@@ -1,4 +1,3 @@
-from dataclasses import fields
 from rest_framework import serializers
 from .models import Department, Personal
 from django.utils.timezone import now
@@ -14,11 +13,14 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 class PersonalSerializer(serializers.ModelSerializer):
     days_since_joined = serializers.SerializerMethodField()
+    #* https://www.django-rest-framework.org/api-guide/fields/#serializermethodfield 👆
 
     create_user = serializers.StringRelatedField()
+    #* https://www.django-rest-framework.org/api-guide/relations/#stringrelatedfield 👆
+
     class Meta:
         model = Personal
-        fields("__all__")
+        fields = "__all__"
 
     def get_days_since_joined(self, obj):
         return (now() - obj.start_date).days #! 👈 converts the result to "days"

@@ -1,4 +1,3 @@
-from email.policy import default
 from django.db import models
 from django.contrib.auth.models import User
 # Create your models here.
@@ -14,7 +13,8 @@ class Personal(models.Model):
 
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, related_name='departments')
 
-    #?related_name="deparments" bize personellerin deparment ile ilişkisi olduğunu söyler ve daha sonra çağırmak için kullanılır kolaylık sağlar. "deparment.id" ve "personel.id" ile ilişkiyi kontrol edebiliriz.#related_name="deparments" bize personellerin deparment ile ilişkisi olduğunu söyler ve daha sonra çağırmak için kullanılır kolaylık sağlar. "deparment.id" ve "personel.id" ile ilişkiyi kontrol edebiliriz. 👆
+    #? related_name="deparments" tells us that the staffs are related to the deparment and is used to call it later. We can check the relationship with "deparment.id" and "personnel.id".
+    #* related_name="deparments" tells us that staffs are related to deparment and it is used to call later for convenience. We can check the relation with "deparment.id" and "personnel.id". 👆
 
     create_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     first_name = models.CharField(max_length=50)
