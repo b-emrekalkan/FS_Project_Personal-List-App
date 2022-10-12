@@ -477,6 +477,8 @@ REST_AUTH_SERIALIZERS = {
 }
 ```
 
+## <center> END OF AUTHENTICATION </center>
+
 <hr>
 
 ## 💻 Go to terminal and create "personalApp" app 👇
@@ -485,14 +487,19 @@ REST_AUTH_SERIALIZERS = {
 python manage.py startapp personalApp
 ```
 
-## settings .... INSTALLED APP
+✔ Go to "settings.py" and add 'personalApp' app to "INSTALLED_APPS"
 
-## Create files in this app .....
+## 🚩 Create the following files under "personalApp" app 👇
+
+- urls.py
+
+- serializers.py
+
+- signals.py
 
 ## 🚩 Go to "models.py" and create models 👇
 
 ```python
-from email.policy import default
 from django.db import models
 from django.contrib.auth.models import User
 # Create your models here.
@@ -508,7 +515,8 @@ class Personal(models.Model):
 
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, related_name='departments')
 
-    #?#related_name="deparments" tells us that the staffs are related to the deparment and is used to call it later. We can check the relationship with deparment.id and staff.id. #related_name="deparments" tells us that staffs have a relationship with deparment, and it is used to call it later. We can check the relationship with deparment.id and staff.id. 👆
+    #? related_name="deparments" tells us that the staffs are related to the deparment and is used to call it later. We can check the relationship with "deparment.id" and "personnel.id".
+    #* related_name="deparments" tells us that staffs are related to deparment and it is used to call later for convenience. We can check the relation with "deparment.id" and "personnel.id". 👆
 
     create_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     first_name = models.CharField(max_length=50)
@@ -536,7 +544,7 @@ class Personal(models.Model):
         return f"{self.title} : {self.first_name} {self.last_name}"
 ```
 
-## 🚩 REGISTER İN ADMİN
+## 🚩 Register the models in "admin.py" 👇
 
 ```python
 from django.contrib import admin
@@ -546,17 +554,16 @@ admin.site.register(Department)
 admin.site.register(Personal)
 ```
 
-## 💻 Migrate db,
+## 💻 Migrate your database 👇
 
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-## Serializers.
+## 🚩 To create serializers go to "serializers.py" 👇
 
 ```python
-from dataclasses import fields
 from rest_framework import serializers
 from .models import Department, Personal
 from django.utils.timezone import now
@@ -572,22 +579,22 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 class PersonalSerializer(serializers.ModelSerializer):
     days_since_joined = serializers.SerializerMethodField()
+    #* https://www.django-rest-framework.org/api-guide/fields/#serializermethodfield 👆
 
     create_user = serializers.StringRelatedField()
+    #* https://www.django-rest-framework.org/api-guide/relations/#stringrelatedfield 👆
+
     class Meta:
         model = Personal
-        fields("__all__")
+        fields = "__all__"
 
     def get_days_since_joined(self, obj):
         return (now() - obj.start_date).days #! 👈 converts the result to "days"
 
 class DepartmentPersonalSerializer(serializers.ModelSerializer):
     personal_count = serializers.SerializerMethodField()
+    #? "deparments" comes from the related name in the model 👇
     departments = PersonalSerializer(many=True, read_only=True)
-    #(nested serializer)obje olarak gösteriyor bütünbilgiler ve many=True yapıyoruz ki birden fazla personel gelebilsin diye
-    #deparments modeldeki related name den geliyor
-    # deparments = serializers.StringRelatedField(many=True)#+string olrak gösteriyor ama modeldeki __str__ içindekine göre yani admin de nasıl gözüküyorsa
-    #deparments = serializers.PrimaryKeyRelatedField(many=True, read_only=True)#öğrencinin id sini gösteriyor
     class Meta:
         model = Department
         fields = ('id', 'name', 'personal_count', 'departments')
@@ -599,6 +606,7 @@ class DepartmentPersonalSerializer(serializers.ModelSerializer):
 ## 🚩 Go to "views.py" and start to create views 👇
 
 ```python
+from django.shortcuts import render
 from rest_framework import status
 from rest_framework import generics
 from personalApp.models import Department, Personal
@@ -632,9 +640,9 @@ urlpatterns = [
 path('api/',include('personalApp.urls')),
 ```
 
-## ✔ Add departments in admin panel and check the get methods in Postman
+## ✔ Add departments in admin panel and check if get method works in [Postman](https://www.postman.com/)
 
-## 🚩 Create "DepartmentPersonelView()" in views.py 👇
+## 🚩 Create "DepartmentPersonelView()" in "views.py" 👇
 
 ```python
 class DepartmentPersonalView(generics.ListAPIView):
@@ -717,14 +725,14 @@ class PersonalGetUpdateDelete(RetrieveUpdateDestroyAPIView):
         instance.delete()
 ```
 
-## 🚩 urls 👇
+## 🚩 Add the path in "urls.py" 👇
 
 ```python
 path('personal/', PersonalListCreate.as_view()),
 path('personal/<int:pk>/', PersonalGetUpdateDelete.as_view()),
 ```
 
-## 🚩 Go to signals.py and add
+## 🚩 Go to "signals.py" and add 👇
 
 ```python
 from django.contrib.auth.models import User
@@ -744,18 +752,27 @@ def is_staffed_user(sender, instance, **kwargs):
             instance.save()
 ```
 
-## 🚩 Go to apps.py and add 👇
+## 🚩 Go to "apps.py" and add 👇
 
 ```python
  def ready(self):
-        import personalApp.signals
+    import personalApp.signals
 ```
+
+## <center>✨ END OF BACKEND 🎉</center>
 
 <hr>
 
+
+<center><img align="center"
+  src="https://www.freecodecamp.org/news/content/images/2021/06/Ekran-Resmi-2019-11-18-18.08.13.png"  width="90px"></center>
+
+# <center> FOR REACT CONFIGURATION <center>
+
 # <center>✔ DJANGO-CORS-HEADERS ✔</center>
 
-## <center> 👆 FOR REACT CONFIGURATION 👆 <center>
+<hr>
+
 
 <hr>
 
@@ -815,3 +832,9 @@ python manage.py runserver
 ```bash
 yarn start
 ```
+
+<hr>
+
+# <center>💨 FRONTEND 💨</center>
+
+<hr>
